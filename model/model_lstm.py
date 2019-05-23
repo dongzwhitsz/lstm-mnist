@@ -11,44 +11,43 @@ class LSTM(object):
 
         self.input_images = tf.placeholder(tf.float32, shape=[self.batch_size, 784], name='input_images')
         self.input_labels = tf.placeholder(tf.float32, shape=[self.batch_size, 10], name='input_labels')
-        self.outputs = self.reference(self.input_images)
+        self.outputs, self.state = self.reference(self.input_images)
         if is_training is not True:
             return
-        self.loss, self.accuracy = loss(self.outputs, self.input_labels)
+        self.loss, self.accuracy = self.loss(self.outputs, self.input_labels)
         self.train_op = self.get_train_op(self.loss)
 
     def reference(self, x):
         with tf.variable_scope('lstm'):
             with tf.variable_scope('data_input'):
-                # default reshaped shape will be [batch_size, 28, 28]
-                input_images = tf.reshape(x, shape=[self.batch_size, -1, self.num_steps])
+                input_images = tf.reshape(x, shape=[-1, self.num_steps])
                 weights = tf.get_variable('weights', shape=[self.num_steps, self.num_units])
                 biases = tf.get_variable('biases', shape=[self.num_units])
-                # inputs shape should be [batch_size, -1, num_numits]
-                # default shape will be [batch_size, 28, 256]
                 inputs = tf.nn.xw_plus_b(input_images, weights, biases)
+                inputs = tf.reshape(inputs, [-1, self.num_steps, self.num_units])
 
             with tf.variable_scope('cell'):
                 if self.is_training is True:
                     inputs = tf.nn.dropout(inputs, keep_prob=self.keep_prob)
                 cell = tf.nn.rnn_cell.LSTMCell(num_units=self.num_units)
                 if self.is_training is True:
-                    cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=keep_prob)
+                    cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=self.keep_prob)
                 if self.num_layers > 1:
-                    cell = tf.nn.rnn_cell.MultiRNNCell([cell for _ in range(num_layers)])
+                    cell = tf.nn.rnn_cell.MultiRNNCell([cell for _ in range(self.num_layers)])
             with tf.variable_scope('dynamic_rnn'):
-                initial_state = cell.zero_state(self.batch_size)
+                initial_state = cell.zero_state(self.batch_size, dtype=tf.float32)
                 # outputs shape should be [batch_size, 28, 256]
                 outputs, state = tf.nn.dynamic_rnn(
                         cell=cell, inputs=inputs, initial_state=initial_state, dtype=tf.float32
                     )
         with tf.variable_scope('data_output'):
-            outputs = tf.reshape(outputs, shape=[batch_size, -1])
-            weights = tf.get_variable('weights', shape=[outputs.get_shape()[-1], 10])
+            # outputs = tf.reshape(outputs, shape=[-1, self.num_units])
+            outputs = outputs[:, -1, :]
+            weights = tf.get_variable('weights', shape=[self.num_units, 10])
             baises = tf.get_variable('baises', shape=[10])
             outputs = tf.nn.xw_plus_b(outputs, weights, baises)
             outputs = tf.nn.softmax(outputs)
-        return outputs
+        return outputs, state
 
     def loss(self, outputs, labels):
         with tf.variable_scope('loss'):
