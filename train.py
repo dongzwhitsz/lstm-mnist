@@ -1,6 +1,7 @@
 from tensorflow.examples.tutorials.mnist import input_data
 import tensorflow as tf
 from model.model_lstm import LSTM
+import tqdm
 
 
 # def load_data():
@@ -21,9 +22,21 @@ def train():
 
     lstm = LSTM(batch_size, num_steps, num_units, keep_prob, num_layers, is_training)
 
-    for epoch in range(epoches):
-        for step in range(img_num // batch_size):
-                pass
+    with tf.Session() as sess:
+        tf.global_variables_initializer().run()		
+        for epoch in range(epoches):
+            for step in tqdm.trange(img_num // batch_size):
+                    images, labels = data.train.next_batch(batch_size)
+                    _, loss, accuracy = sess.run(
+                        [lstm.train_op, lstm.loss, lstm.accuracy],
+                        feed_dict={
+                            lstm.input_images: images,
+                            lstm.input_labels: labels
+                        }
+                    )
+                    if step %100 is 0:
+                        print('loss: {}, accuracy: {}'.format(loss, accuracy))
+                    
 
 
 

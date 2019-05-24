@@ -52,6 +52,7 @@ class LSTM(object):
     def loss(self, outputs, labels):
         with tf.variable_scope('loss'):
             ent = tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=labels)
+            ent = tf.reduce_mean(ent)
         with tf.variable_scope('accuracy'):
             logits = tf.math.argmax(outputs, axis=1)
             labels = tf.math.argmax(labels, axis=1)
