@@ -65,7 +65,7 @@ class LSTM(object):
         tvars = tf.trainable_variables()
         self.learning_rate = tf.Variable(0.01, name='learning_rate')
         self.global_step = tf.Variable(0, name='global_step')
-        optimizer = tf.train.AdamOptimizer(self.learning_rate)
+        optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
         grads = tf.gradients(loss, tvars)
         grads, _ = tf.clip_by_global_norm(grads, 5)
         train_op = optimizer.apply_gradients(
