@@ -5,5 +5,9 @@ a program to recognize the images in mnist dataset by the lstm. The following is
 
 ## result
 the result of training curves:
+
 ![training curves](./pictures/train_result.png)
+
+the result of valid curves:
+
 ![validaion curves](./pictures/valid_result.png)
