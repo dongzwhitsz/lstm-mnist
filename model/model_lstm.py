@@ -26,7 +26,6 @@ class LSTM(object):
                 biases = tf.get_variable('biases', shape=[self.num_units])
                 inputs = tf.nn.xw_plus_b(input_images, weights, biases)
                 inputs = tf.reshape(inputs, [-1, self.num_steps, self.num_units])
-
             with tf.variable_scope('cell'):
                 if self.is_training is True:
                     inputs = tf.nn.dropout(inputs, keep_prob=self.keep_prob)
@@ -62,16 +61,17 @@ class LSTM(object):
         return ent, accuracy
 
     def get_train_op(self, loss):
-        tvars = tf.trainable_variables()
-        self.learning_rate = tf.Variable(0.01, name='learning_rate')
-        self.global_step = tf.Variable(0, name='global_step')
-        optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
-        grads = tf.gradients(loss, tvars)
-        grads, _ = tf.clip_by_global_norm(grads, 5)
-        train_op = optimizer.apply_gradients(
-            zip(grads, tvars),
-            global_step=self.global_step
-        )
+        with tf.variable_scope('train_op'):
+            tvars = tf.trainable_variables()
+            self.learning_rate = tf.Variable(0.01, name='learning_rate')
+            self.global_step = tf.Variable(0, name='global_step')
+            optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
+            grads = tf.gradients(loss, tvars)
+            grads, _ = tf.clip_by_global_norm(grads, 5)
+            train_op = optimizer.apply_gradients(
+                zip(grads, tvars),
+                global_step=self.global_step
+            )
         return train_op
 
     def get_summaries(self):
@@ -79,4 +79,3 @@ class LSTM(object):
         tf.summary.scalar("accuracy", self.accuracy)
         merged_summary = tf.summary.merge_all()
         return merged_summary
-

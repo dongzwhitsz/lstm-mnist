@@ -5,7 +5,7 @@ import tqdm
 
 
 def train():
-    batch_size = 50
+    batch_size = 200
     num_steps = 28
     num_units = 256
     keep_prob = 0.7
@@ -35,6 +35,22 @@ def train():
                     )
                     if step %100 is 0:
                         tensorboard_writer.add_summary(merged_summary, global_step=global_step)
+
+            images, labels = data.validation.next_batch(batch_size)
+            loss, accuracy, global_step = sess.run(
+                        [lstm.loss, lstm.accuracy, lstm.global_step],
+                        feed_dict={
+                            lstm.input_images: images,
+                            lstm.input_labels: labels
+                        }
+                    )
+            valid_summary = tf.Summary()
+            valid_summary.value.add(tag='valid_accuracy', simple_value=accuracy)
+            tensorboard_writer.add_summary(valid_summary, global_step)
+
+            valid_summary = tf.Summary()
+            valid_summary.value.add(tag='valid_loss', simple_value=loss)
+            tensorboard_writer.add_summary(valid_summary, global_step)
 
 
 if __name__ == "__main__":
