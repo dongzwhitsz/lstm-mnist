@@ -16,6 +16,7 @@ class LSTM(object):
             return
         self.loss, self.accuracy = self.loss(self.outputs, self.input_labels)
         self.train_op = self.get_train_op(self.loss)
+        self.merged_summary = self.get_summaries()
 
     def reference(self, x):
         with tf.variable_scope('lstm'):
@@ -72,3 +73,10 @@ class LSTM(object):
             global_step=self.global_step
         )
         return train_op
+
+    def get_summaries(self):
+        tf.summary.scalar("loss", self.loss)
+        tf.summary.scalar("accuracy", self.accuracy)
+        merged_summary = tf.summary.merge_all()
+        return merged_summary
+

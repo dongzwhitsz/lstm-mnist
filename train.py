@@ -4,9 +4,6 @@ from model.model_lstm import LSTM
 import tqdm
 
 
-# def load_data():
-    
-
 def train():
     batch_size = 50
     num_steps = 28
@@ -23,23 +20,22 @@ def train():
     lstm = LSTM(batch_size, num_steps, num_units, keep_prob, num_layers, is_training)
 
     with tf.Session() as sess:
-        tf.global_variables_initializer().run()		
+        tf.global_variables_initializer().run()
+        tensorboard_writer = tf.summary.FileWriter('./tensorboard')
+        tensorboard_writer.add_graph(sess.graph)
         for epoch in range(epoches):
             for step in tqdm.trange(img_num // batch_size):
                     images, labels = data.train.next_batch(batch_size)
-                    _, loss, accuracy = sess.run(
-                        [lstm.train_op, lstm.loss, lstm.accuracy],
+                    _, loss, accuracy, merged_summary, global_step = sess.run(
+                        [lstm.train_op, lstm.loss, lstm.accuracy, lstm.merged_summary, lstm.global_step],
                         feed_dict={
                             lstm.input_images: images,
                             lstm.input_labels: labels
                         }
                     )
                     if step %100 is 0:
-                        print('loss: {}, accuracy: {}'.format(loss, accuracy))
-                    
-
+                        tensorboard_writer.add_summary(merged_summary, global_step=global_step)
 
 
 if __name__ == "__main__":
     train()
-    
